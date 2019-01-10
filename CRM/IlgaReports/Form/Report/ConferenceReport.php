@@ -24,6 +24,7 @@ class CRM_IlgaReports_Form_Report_ConferenceReport extends CRM_Report_Form {
   public function __construct() {
     $this->case_statuses = CRM_Core_OptionGroup::values('case_status');
     $this->case_types = CRM_Case_PseudoConstant::caseType();
+    $this->gender_types = CRM_Core_OptionGroup::values('gender');
     $rels = CRM_Core_PseudoConstant::relationshipType();
     foreach ($rels as $relid => $v) {
       $this->rel_types[$relid] = $v['label_b_a'];
@@ -123,6 +124,31 @@ class CRM_IlgaReports_Form_Report_ConferenceReport extends CRM_Report_Form {
             'name' => 'sort_name',
             'title' => ts('Client Name'),
             'required' => TRUE,
+          ],
+          'client_first_name' => [
+            'name' => 'first_name',
+            'title' => ts('First Name'),
+            'required' => FALSE,
+          ],
+          'client_last_name' => [
+            'name' => 'last_name',
+            'title' => ts('Last Name'),
+            'required' => FALSE,
+          ],
+          'client_nick_name' => [
+            'name' => 'nick_name',
+            'title' => ts('Preferred Name'),
+            'required' => FALSE,
+          ],
+          'client_birth_date' => [
+            'name' => 'birth_date',
+            'title' => ts('Date of Birth'),
+            'required' => FALSE,
+          ],
+          'client_gender_id' => [
+            'name' => 'gender_id',
+            'title' => ts('Gender'),
+            'required' => FALSE,
           ],
           'id' => [
             'no_display' => TRUE,
@@ -262,6 +288,29 @@ class CRM_IlgaReports_Form_Report_ConferenceReport extends CRM_Report_Form {
           ],
         ],
       ],
+      'civicrm_participant' => [
+        'dao' => 'CRM_Event_DAO_Participant',
+        'filters' => [
+          'status_id' =>
+            ['title' => 'Participant Status',
+              'type' => CRM_Utils_Type::T_INT,
+              'operatorType' => CRM_Report_Form::OP_MULTISELECT,
+              'options' => CRM_Event_PseudoConstant::participantStatus(),
+            ],
+          'role_id' =>
+            ['title' => 'Participant Role',
+              'type' => CRM_Utils_Type::T_INT,
+              'operatorType' => CRM_Report_Form::OP_MULTISELECT,
+              'options' => CRM_Event_PseudoConstant::participantRole(),
+            ],
+          'event_id' =>
+            ['title' => 'Event',
+              'type' => CRM_Utils_Type::T_INT,
+              'operatorType' => CRM_Report_Form::OP_MULTISELECT,
+              'options' => CRM_Event_PseudoConstant::event(),
+            ]
+        ]
+      ]
     ];
 
     $this->_options = [
@@ -355,12 +404,14 @@ class CRM_IlgaReports_Form_Report_ConferenceReport extends CRM_Report_Form {
   public function from() {
 
     $case = $this->_aliases['civicrm_case'];
-    $conact = $this->_aliases['civicrm_contact'];
+    $contact = $this->_aliases['civicrm_contact'];
+    $participant = $this->_aliases['civicrm_participant'];
 
     $this->_from = "
              FROM civicrm_case $case
  LEFT JOIN civicrm_case_contact civireport_case_contact on civireport_case_contact.case_id = {$case}.id
- LEFT JOIN civicrm_contact $conact ON {$conact}.id = civireport_case_contact.contact_id
+ LEFT JOIN civicrm_contact $contact ON {$contact}.id = civireport_case_contact.contact_id
+ LEFT JOIN civicrm_participant $participant ON {$contact}.id = {$participant}.contact_id
  ";
     if ($this->_relField) {
       $this->_from .= "
@@ -371,6 +422,7 @@ class CRM_IlgaReports_Form_Report_ConferenceReport extends CRM_Report_Form {
     $this->joinAddressFromContact();
     $this->joinPhoneFromContact();
     $this->joinEmailFromContact();
+
 
     if ($this->isTableSelected('civicrm_worldregion')) {
       $this->_from .= "
@@ -586,6 +638,13 @@ class CRM_IlgaReports_Form_Report_ConferenceReport extends CRM_Report_Form {
       if (array_key_exists('civicrm_case_status_id', $row)) {
         if ($value = $row['civicrm_case_status_id']) {
           $rows[$rowNum]['civicrm_case_status_id'] = $this->case_statuses[$value];
+
+          $entryFound = TRUE;
+        }
+      }
+      if (array_key_exists('civicrm_contact_client_gender_id', $row)) {
+        if ($value = $row['civicrm_contact_client_gender_id']) {
+          $rows[$rowNum]['civicrm_contact_client_gender_id'] = $this->gender_types[$value];
 
           $entryFound = TRUE;
         }
