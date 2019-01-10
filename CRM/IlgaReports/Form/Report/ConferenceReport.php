@@ -291,14 +291,16 @@ class CRM_IlgaReports_Form_Report_ConferenceReport extends CRM_Report_Form {
       'civicrm_participant' => [
         'dao' => 'CRM_Event_DAO_Participant',
         'filters' => [
-          'status_id' =>
-            ['title' => 'Participant Status',
+          'participant_status_id' =>
+            [ 'title' => 'Participant Status',
+              'name' => 'status_id',
               'type' => CRM_Utils_Type::T_INT,
               'operatorType' => CRM_Report_Form::OP_MULTISELECT,
               'options' => CRM_Event_PseudoConstant::participantStatus(),
             ],
-          'role_id' =>
-            ['title' => 'Participant Role',
+          'participant_role_id' =>
+            [ 'title' => 'Participant Role',
+              'name'  => 'role_id',
               'type' => CRM_Utils_Type::T_INT,
               'operatorType' => CRM_Report_Form::OP_MULTISELECT,
               'options' => CRM_Event_PseudoConstant::participantRole(),
